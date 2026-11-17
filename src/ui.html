@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Luma Wallpaper</title>
+<style>
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#12141A;color:#E8EAF0;font:14px "Segoe UI",Inter,sans-serif}
+#app{display:flex;height:100vh}
+aside.side{width:220px;padding:20px 12px;display:flex;flex-direction:column;gap:4px;background:#0D0F14}
+.logo{display:flex;align-items:center;gap:10px;padding:0 12px 20px;font-weight:700;font-size:16px}
+.nav{height:44px;padding:0 12px;border:0;border-radius:10px;background:none;color:#9AA3B5;font:500 14px inherit;text-align:left;cursor:pointer}
+.nav.on{background:#1E2230;color:#E8EAF0}
+main{flex:1;min-width:0;padding:24px 28px;display:flex;flex-direction:column;gap:20px;overflow:auto}
+h1{margin:0;font-size:24px;flex:1}
+.top{display:flex;align-items:center;gap:16px}
+input[type=search]{height:40px;width:240px;padding:0 14px;border:0;border-radius:20px;background:#1E2230;color:#E8EAF0;font:14px inherit;outline:0}
+.chips{display:flex;gap:8px}
+.chip{height:36px;padding:0 14px;border:1px solid #2A3042;border-radius:18px;background:none;color:#9AA3B5;font:500 13px inherit;cursor:pointer}
+.chip.on{background:#E8EAF0;color:#12141A;border-color:#E8EAF0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px 18px}
+.card{display:flex;flex-direction:column;gap:8px;padding:0;border:0;background:none;color:#E8EAF0;font:500 13px inherit;text-align:left;cursor:pointer}
+.th{height:112px;border-radius:12px;border:2px solid transparent;background:linear-gradient(135deg,#1E2230,#2C3550);overflow:hidden}
+.th img{width:100%;height:100%;object-fit:cover;display:block}
+.card.sel .th{border-color:#5EEAD4}
+.card.off{opacity:.55}
+.tag{font-weight:400;color:#9AA3B5;font-size:12px}
+.empty{color:#9AA3B5;line-height:1.6}
+aside.panel{width:300px;padding:24px;display:flex;flex-direction:column;gap:18px;background:#171A22}
+.pv{height:140px;border-radius:12px;background:linear-gradient(135deg,#1E2230,#2C3550);overflow:hidden}
+.pv img{width:100%;height:100%;object-fit:cover}
+label.l{font-size:12px;color:#9AA3B5;display:block;margin-bottom:8px}
+select{width:100%;height:40px;border-radius:10px;border:1px solid #2A3042;background:#12141A;color:#E8EAF0;padding:0 12px;font:14px inherit}
+.go{height:48px;border:0;border-radius:12px;background:#5EEAD4;color:#0D0F14;font:600 15px inherit;cursor:pointer}
+.go:disabled{background:#2A3042;color:#9AA3B5;cursor:default}
+.row{display:flex;align-items:center;gap:16px;padding:14px 0;border-top:1px solid #2A3042}
+.row span{flex:1}.row small{display:block;margin-top:2px;color:#9AA3B5;font-size:12px}
+.sw{width:44px;height:44px;border:0;background:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.sw i{display:block;width:40px;height:22px;border-radius:11px;background:#2A3042;position:relative}
+.sw i:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:8px;background:#E8EAF0}
+.sw[aria-pressed=true] i{background:#5EEAD4}
+.sw[aria-pressed=true] i:after{left:21px;background:#0D0F14}
+.btn{height:40px;padding:0 16px;border:1px solid #2A3042;border-radius:10px;background:none;color:#E8EAF0;font:500 14px inherit;cursor:pointer}
+.imp{display:flex;gap:8px}
+.imp input,.txt{height:40px;padding:0 14px;border:1px solid #2A3042;border-radius:10px;background:#12141A;color:#E8EAF0;font:14px inherit;outline:0}
+.imp input{flex:1}.txt{width:260px}
+.btn:disabled{opacity:.5;cursor:default}
+.hide{display:none!important}
+</style></head><body>
+<div id="app">
+  <aside class="side">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 15c3-6 6-6 9 0s6 6 9 0"/><path d="M3 8c3-6 6-6 9 0s6 6 9 0" opacity=".5"/></svg>
+      Luma Wallpaper
+    </div>
+    <button class="nav on" id="nav-lib">Библиотека</button>
+    <button class="nav" id="nav-set">Настройки</button>
+  </aside>
+
+  <main id="v-lib">
+    <div class="top"><h1>Библиотека</h1><input id="q" type="search" placeholder="Поиск обоев" aria-label="Поиск"></div>
+    <div class="imp"><input id="url" type="url" placeholder="Ссылка Steam Workshop (или ID) либо прямая ссылка на .zip / .mp4 / .webm" aria-label="Ссылка на обои"><button class="btn" id="dl">Загрузить</button></div>
+    <div id="toast" class="tag hide" role="status"></div>
+    <div class="chips" id="chips"></div>
+    <div class="grid" id="grid"></div>
+    <div class="empty hide" id="empty"></div>
+  </main>
+
+  <main id="v-set" class="hide">
+    <div class="top"><h1>Настройки</h1></div>
+    <div id="rows"></div>
+  </main>
+
+  <aside class="panel" id="panel">
+    <div class="pv" id="pv"></div>
+    <div><div id="pt" style="font-size:18px;font-weight:600"></div><div id="pm" class="tag" style="margin-top:4px"></div></div>
+    <div><label class="l" for="mon">Монитор</label><select id="mon"></select></div>
+    <div style="flex:1"></div>
+    <button class="go" id="go" disabled>Применить</button>
+  </aside>
+</div>
+<script>
+var S={items:[],settings:{},monitors:1}, sel=null, filter='all', q='';
+var KIND={video:'Видео',web:'Web',scene:'Scene',application:'Приложение'};
+function send(o){window.ipc.postMessage(JSON.stringify(o));}
+function $(id){return document.getElementById(id);}
+function el(t,c,txt){var e=document.createElement(t);if(c)e.className=c;if(txt!=null)e.textContent=txt;return e;}
+window.luma={state:function(s){S=s;render();},toast:function(m,ok){var t=$('toast');t.textContent=m;t.style.color=ok?'#5EEAD4':'#FF8A80';t.classList.remove('hide');$('dl').disabled=false;}};
+
+function active(it){var s=S.settings;if(!s)return false;if(s.all===it.path)return true;
+  return Object.keys(s.per_monitor||{}).some(function(k){return s.per_monitor[k]===it.path;});}
+
+function render(){renderChips();renderGrid();renderPanel();renderSettings();}
+
+function renderChips(){
+  var c=$('chips');c.textContent='';
+  [['all','Все'],['video','Видео'],['web','Web'],['scene','Scene']].forEach(function(f){
+    var b=el('button','chip'+(filter===f[0]?' on':''),f[1]);
+    b.onclick=function(){filter=f[0];render();};c.appendChild(b);});
+}
+
+function renderGrid(){
+  var g=$('grid');g.textContent='';
+  var list=S.items.filter(function(it){
+    return (filter==='all'||it.type===filter)&&it.title.toLowerCase().indexOf(q)>=0;});
+  $('empty').classList.toggle('hide',list.length>0);
+  $('empty').textContent=S.items.length?'Ничего не найдено.':'В папке нет обоев. Положи папки Wallpaper Engine (с project.json) в '+(S.settings.folder||'')+' или выбери другую папку в настройках.';
+  list.forEach(function(it){
+    var b=el('button','card'+(sel&&sel.path===it.path?' sel':'')+(it.supported?'':' off'));
+    var th=el('div','th');
+    if(it.preview){var im=document.createElement('img');im.src=it.preview;im.alt='';th.appendChild(im);}
+    b.appendChild(th);
+    b.appendChild(el('span','',it.title));
+    b.appendChild(el('span','tag',(active(it)?'● ':'')+(KIND[it.type]||it.type||'?')+(it.supported?'':' · пока не поддерживается')));
+    b.onclick=function(){sel=it;render();};
+    g.appendChild(b);});
+}
+
+function renderPanel(){
+  var pv=$('pv');pv.textContent='';
+  if(sel&&sel.preview){var im=document.createElement('img');im.src=sel.preview;im.alt='';pv.appendChild(im);}
+  $('pt').textContent=sel?sel.title:'Выбери обои';
+  $('pm').textContent=sel?(KIND[sel.type]||sel.type):'';
+  var m=$('mon'),cur=m.value||'all';m.textContent='';
+  var o=el('option','','Все мониторы');o.value='all';m.appendChild(o);
+  for(var i=0;i<S.monitors;i++){o=el('option','','Монитор '+(i+1));o.value=String(i);m.appendChild(o);}
+  m.value=cur;
+  $('go').disabled=!(sel&&sel.supported);
+}
+$('go').onclick=function(){if(sel)send({cmd:'apply',path:sel.path,monitor:$('mon').value});};
+$('q').oninput=function(){q=this.value.toLowerCase();renderGrid();};
+
+function renderSettings(){
+  var r=$('rows');r.textContent='';var s=S.settings||{};
+  [['autostart','Запускать вместе с Windows','Свернуто в трей'],
+   ['pause_fullscreen','Пауза при полноэкранном приложении','Игры и видео поверх обоев'],
+   ['pause_battery','Пауза при работе от батареи',''],
+   ['audio','Реагировать на звук','Системный звук для визуализаторов']].forEach(function(d){
+    var row=el('div','row'),sp=el('span','',d[1]);
+    if(d[2])sp.appendChild(el('small','',d[2]));
+    var b=el('button','sw');b.setAttribute('aria-label',d[1]);b.setAttribute('aria-pressed',s[d[0]]?'true':'false');
+    b.appendChild(document.createElement('i'));
+    b.onclick=function(){send({cmd:'set',key:d[0],value:!s[d[0]]});};
+    row.appendChild(sp);row.appendChild(b);r.appendChild(row);});
+  var row=el('div','row'),sp=el('span','','Папка с обоями');sp.appendChild(el('small','',s.folder||''));
+  var b=el('button','btn','Изменить');b.onclick=function(){send({cmd:'pick_folder'});};
+  row.appendChild(sp);row.appendChild(b);r.appendChild(row);
+  [['steamcmd','Путь к steamcmd.exe','Для загрузки из Steam Workshop (нужен аккаунт с Wallpaper Engine)'],['steam_user','Логин Steam','Вход должен быть сохранён в steamcmd']].forEach(function(d){
+    var rw=el('div','row'),s2=el('span','',d[1]);s2.appendChild(el('small','',d[2]));
+    var inp=document.createElement('input');inp.className='txt';inp.setAttribute('aria-label',d[1]);inp.value=s[d[0]]||'';
+    inp.onchange=function(){send({cmd:'set_text',key:d[0],value:inp.value});};
+    rw.appendChild(s2);rw.appendChild(inp);r.appendChild(rw);});
+}
+$('dl').onclick=function(){var u=$('url').value.trim();if(!u)return;this.disabled=true;var t=$('toast');t.style.color='#9AA3B5';t.textContent='Загрузка…';t.classList.remove('hide');send({cmd:'import',url:u});};
+
+function show(v){
+  $('v-lib').classList.toggle('hide',v!=='lib');$('v-set').classList.toggle('hide',v!=='set');
+  $('panel').classList.toggle('hide',v!=='lib');
+  $('nav-lib').classList.toggle('on',v==='lib');$('nav-set').classList.toggle('on',v==='set');}
+$('nav-lib').onclick=function(){show('lib');};$('nav-set').onclick=function(){show('set');};
+send({cmd:'init'});
+</script></body></html>
