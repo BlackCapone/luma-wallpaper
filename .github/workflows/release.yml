@@ -1,0 +1,50 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        shell: pwsh
+        run: |
+          cargo build --release --message-format short 2>&1 | Tee-Object -FilePath build.log
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Report errors
+        if: failure()
+        shell: pwsh
+        run: |
+          Select-String -Path build.log -Pattern 'error' | Select-Object -First 10 | ForEach-Object {
+            $m = $_.Line -replace '[\r\n%]', ' '
+            Write-Host "::error::$m"
+          }
+
+      - name: Package
+        shell: pwsh
+        run: |
+          Compress-Archive -Path target\release\luma-wallpaper.exe, README.md -DestinationPath luma-wallpaper-windows-x64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: luma-wallpaper-windows-x64
+          path: luma-wallpaper-windows-x64.zip
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: luma-wallpaper-windows-x64.zip
+          generate_release_notes: true
