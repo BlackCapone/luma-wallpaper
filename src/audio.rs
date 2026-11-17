@@ -28,8 +28,20 @@ fn spectrum(fft: &dyn Fft<f32>, win: &[f32], s: &[f32], prev: &mut [f32], out: &
     }
 }
 
-/// Возвращает Stream: его нужно держать живым. None — если захват недоступен.
-pub fn start<F: Fn(Vec<f32>) + Send + 'static>(enabled: Arc<AtomicBool>, send: F) -> Option<Stream> {
+/// cpal инициализирует COM как MTA на том потоке, где его вызвали. На главном потоке это
+/// ломает winit и WebView2 (им нужен STA), поэтому весь захват живёт в отдельном потоке.
+pub fn start<F: Fn(Vec<f32>) + Send + 'static>(enabled: Arc<AtomicBool>, send: F) {
+    std::thread::spawn(move || {
+        let stream = build(enabled, send);
+        if stream.is_some() {
+            loop {
+                std::thread::park(); // Stream должен оставаться живым
+            }
+        }
+    });
+}
+
+fn build<F: Fn(Vec<f32>) + Send + 'static>(enabled: Arc<AtomicBool>, send: F) -> Option<Stream> {
     // на Windows input-поток, открытый на устройстве вывода, работает как loopback
     let device = cpal::default_host().default_output_device()?;
     let cfg = device.default_output_config().ok()?;

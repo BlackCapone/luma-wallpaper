@@ -54,6 +54,16 @@ struct Ui {
     window: Window,
 }
 
+/// Журнал в %APPDATA%\Luma\luma.log (у релизной сборки нет консоли).
+fn log(msg: &str) {
+    use std::io::Write;
+    let dir = std::path::PathBuf::from(std::env::var("APPDATA").unwrap_or_else(|_| ".".into())).join("Luma");
+    let _ = std::fs::create_dir_all(&dir);
+    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(dir.join("luma.log")) {
+        let _ = writeln!(f, "{msg}");
+    }
+}
+
 fn make_icon() -> Icon {
     let n = 32usize;
     let mut px = Vec::with_capacity(n * n * 4);
@@ -151,6 +161,7 @@ fn main() -> anyhow::Result<()> {
             }
         };
     }
+    std::panic::set_hook(Box::new(|info| log(&format!("panic: {info}"))));
     let tray_only = argv.iter().any(|a| a == "--tray");
     let mut cfg = Settings::load();
 
@@ -185,7 +196,7 @@ fn main() -> anyhow::Result<()> {
 
     let audio_on = Arc::new(AtomicBool::new(cfg.audio));
     let p = proxy.clone();
-    let _audio = audio::start(audio_on.clone(), move |v| {
+    audio::start(audio_on.clone(), move |v| {
         let _ = p.send_event(UserEvent::Audio(v));
     });
 
@@ -196,7 +207,13 @@ fn main() -> anyhow::Result<()> {
     #[allow(deprecated)]
     ev.run(move |event, elwt| match event {
         Event::NewEvents(StartCause::Init) => {
-            ui = build_ui(elwt, proxy.clone(), !tray_only).ok();
+            ui = match build_ui(elwt, proxy.clone(), !tray_only) {
+                Ok(u) => Some(u),
+                Err(e) => {
+                    log(&format!("не удалось создать окно интерфейса: {e}"));
+                    None
+                }
+            };
             wps = apply(elwt, &cfg);
         }
         Event::WindowEvent { window_id, event: WindowEvent::CloseRequested } => {
