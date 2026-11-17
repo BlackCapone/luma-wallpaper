@@ -61,6 +61,13 @@ pub fn on_battery() -> bool {
     }
 }
 
+/// Для режима `unpack`: вывод в консоль, из которой запущен exe (в релизе у него нет своей).
+pub fn attach_console() {
+    unsafe {
+        let _ = windows::Win32::System::Console::AttachConsole(windows::Win32::System::Console::ATTACH_PARENT_PROCESS);
+    }
+}
+
 pub fn set_autostart(on: bool) -> std::io::Result<()> {
     let run = RegKey::predef(HKEY_CURRENT_USER)
         .open_subkey_with_flags(r"Software\Microsoft\Windows\CurrentVersion\Run", KEY_SET_VALUE)?;

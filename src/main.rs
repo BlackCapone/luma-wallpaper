@@ -2,7 +2,10 @@
 mod audio;
 mod desktop;
 mod import;
+mod pkg;
 mod settings;
+mod tex;
+mod unpack;
 mod we;
 
 use serde_json::{json, Value};
@@ -137,7 +140,18 @@ fn set_pause(wps: &[Wp], p: bool) {
 }
 
 fn main() -> anyhow::Result<()> {
-    let tray_only = std::env::args().any(|a| a == "--tray");
+    let argv: Vec<String> = std::env::args().collect();
+    if argv.get(1).map(String::as_str) == Some("unpack") {
+        desktop::attach_console();
+        return match (argv.get(2), argv.get(3)) {
+            (Some(p), Some(o)) => unpack::run(Path::new(p), Path::new(o)),
+            _ => {
+                println!("Использование: luma-wallpaper unpack <scene.pkg> <папка>");
+                Ok(())
+            }
+        };
+    }
+    let tray_only = argv.iter().any(|a| a == "--tray");
     let mut cfg = Settings::load();
 
     let ev = EventLoop::<UserEvent>::with_user_event().build()?;
